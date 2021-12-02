@@ -15,10 +15,16 @@ interface Trade {
 const App = function () {
   const [trades, setTrades] = useState<Trade[]>([]);
   const onMessage = ({ data }: MessageEvent) => {
-    const { id, exchange, price, quantity } = JSON.parse(data).payload;
-    console.log(JSON.parse(data));
-    setTrades((ts) => [{ id, exchange, price, quantity }, ...ts.slice(0, 99)]);
-    console.log({ id, exchange });
+    const { payload } = JSON.parse(data);
+    if (!payload) return;
+
+    const { id, exchange, price, quantity } = payload;
+    if (!id) return; // implies init sucess message
+
+    setTrades((ts) => [
+      { id, exchange, price: +price, quantity: +quantity },
+      ...ts.slice(0, 9),
+    ]);
   };
   useEffect(() => {
     console.log(`adding event listener`);
@@ -40,30 +46,33 @@ const App = function () {
     };
   }, []);
   return (
-    <div className="App container mx-auto">
-      <div>trades ({trades.length})</div>
+    <div className="App container mx-auto py-2">
+      <h1 className="text-xl font-bold">Trades Stream</h1>
+      <h1 className="italic mb-3">
+        Last 10 ETH-USD trades aggregated from SFOX
+      </h1>
       <div className="flex flex-col">
         <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
             <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="table-fixed min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="w-1/3 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       Exchange
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="w-1/3 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       Quantity
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="w-1/3 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       Price
                     </th>
@@ -76,13 +85,15 @@ const App = function () {
                         {t.exchange}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {t.quantity}
+                        {t.quantity.toLocaleString(undefined, {
+                          maximumFractionDigits: 8,
+                        })}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{t.price}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        Admin
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {t.price.toLocaleString(undefined, {
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" />
                     </tr>
                   ))}
                 </tbody>
