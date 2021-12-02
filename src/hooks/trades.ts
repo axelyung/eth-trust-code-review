@@ -4,7 +4,7 @@ const wsURI = `wss://ws.sfox.com/ws`;
 
 const ws = new WebSocket(wsURI);
 
-interface Trade {
+export interface Trade {
   id: string;
   exchange: string;
   price: number;
