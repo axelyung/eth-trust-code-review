@@ -1,8 +1,36 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-function App() {
+const wsURI = `wss://ws.sfox.com/ws`;
+
+const ws = new WebSocket(wsURI);
+
+const onMessage = ({ data }: MessageEvent) => {
+  const d = JSON.parse(data);
+  console.log(d);
+};
+
+const App = function () {
+  useEffect(() => {
+    console.log(`adding event listener`);
+    ws.addEventListener(`message`, onMessage);
+    ws.addEventListener(`open`, () => {
+      console.log(`subscribing`);
+      const subscribeMsg = {
+        type: `subscribe`,
+        feeds: [`ticker.sfox.btcusd`],
+      };
+      ws.send(JSON.stringify(subscribeMsg));
+    });
+
+    return () => {
+      console.log(`removing event listener`);
+      ws.removeEventListener(`message`, onMessage);
+      console.log(`closing connection`);
+      ws.close();
+    };
+  });
   return (
     <div className="App">
       <header className="App-header">
@@ -21,6 +49,6 @@ function App() {
       </header>
     </div>
   );
-}
+};
 
 export default App;
