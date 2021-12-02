@@ -1,17 +1,25 @@
-import React, { useEffect } from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 
 const wsURI = `wss://ws.sfox.com/ws`;
 
 const ws = new WebSocket(wsURI);
 
-const onMessage = ({ data }: MessageEvent) => {
-  const d = JSON.parse(data);
-  console.log(d);
-};
+interface Trade {
+  id: string;
+  exchange: string;
+  price: number;
+  quantity: number;
+}
 
 const App = function () {
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const onMessage = ({ data }: MessageEvent) => {
+    const { id, exchange, price, quantity } = JSON.parse(data).payload;
+    console.log(JSON.parse(data));
+    setTrades((ts) => [...ts, { id, exchange, price, quantity }]);
+    console.log({ id, exchange });
+  };
   useEffect(() => {
     console.log(`adding event listener`);
     ws.addEventListener(`message`, onMessage);
@@ -19,7 +27,7 @@ const App = function () {
       console.log(`subscribing`);
       const subscribeMsg = {
         type: `subscribe`,
-        feeds: [`ticker.sfox.btcusd`],
+        feeds: [`trades.sfox.ethusd`],
       };
       ws.send(JSON.stringify(subscribeMsg));
     });
@@ -30,23 +38,15 @@ const App = function () {
       console.log(`closing connection`);
       ws.close();
     };
-  });
+  }, []);
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div>trades ({trades.length})</div>
+      {trades.map((t) => (
+        <div key={t.id}>
+          {t.id} - {t.exchange} - {t.quantity} - {t.price}
+        </div>
+      ))}
     </div>
   );
 };
